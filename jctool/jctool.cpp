@@ -2794,125 +2794,12 @@ stepf:
 }
 
 
-/*
-//usb test
-int usb_init(hid_device *handle) {
-    int res;
-    u8 buf_cmd[2];
-    u8 buf_cmd2[2];
-    memset(buf_cmd, 0, sizeof(buf_cmd));
-    memset(buf_cmd2, 0, sizeof(buf_cmd2));
-
-    Sleep(16);
-    buf_cmd[0] = 1;
-    buf_cmd[0] = 0x80;
-    Sleep(16);
-    buf_cmd[1] = 0x01;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-    Sleep(16);
-    buf_cmd[1] = 0x02;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-    Sleep(16);
-    buf_cmd[1] = 0x03;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-    Sleep(16);
-    buf_cmd[1] = 0x02;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-    Sleep(16);
-    buf_cmd[1] = 0x04;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-
-    return 0;
-}
-
-int usb_deinit(hid_device *handle) {
-    int res;
-    u8 buf_cmd[2];
-    u8 buf_cmd2[2];
-    memset(buf_cmd, 0, sizeof(buf_cmd));
-    memset(buf_cmd2, 0, sizeof(buf_cmd2));
-
-    Sleep(16);
-    buf_cmd[0] = 0x80;
-    buf_cmd[1] = 0x05;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-
-    return 0;
-}
-
-int usb_command(hid_device *handle) {
-    int res;
-    u8 buf_cmd[20];
-    u8 buf_cmd2[1];
-    memset(buf_cmd, 0, sizeof(buf_cmd));
-    memset(buf_cmd2, 0, sizeof(buf_cmd2));
-
-    buf_cmd[0] = 0x80;
-    buf_cmd[1] = 0x92;
-    buf_cmd[3] = 0x31;
-    buf_cmd[8] = 0x01;
-
-    Sleep(16);
-
-    buf_cmd[9] = timming_byte & 0xF;
-    timming_byte++;
-    buf_cmd[18] = 0x40;
-    buf_cmd[19] = 0x01;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-    Sleep(16);
-
-    buf_cmd[9] = timming_byte & 0xF;
-    timming_byte++;
-    buf_cmd[18] = 0x30;
-    buf_cmd[19] = 0x1;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-
-    Sleep(16);
-
-    buf_cmd[9] = timming_byte & 0xF;
-    timming_byte++;
-    buf_cmd[18] = 0x38;
-    buf_cmd[19] = 0x22;
-    buf_cmd[9] = timming_byte & 0xF;
-    timming_byte++;
-    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
-    res = hid_read(handle, buf_cmd2, 0);
-
-    return 0;
-}
-
-void usb_device_print(struct hid_device_info *dev)
-{
-    const wchar_t *interface_name = L"";
-
-    if (wcscmp(dev->serial_number, L"000000000001"))
-        interface_name = L"BT-HID";
-    else
-        interface_name = L"USB-HID";
-
-    printf("USB device info:\n  VID:          0x%04hX\n" \
-        "  PID:          0x%04hX\n  Dev Path:     %s\n" \
-        "  MAC:          %ls\n  Interface:    %ls (%d)\n  Manufacturer: %ls\n" \
-        "  Product:      %ls\n\n", dev->vendor_id, dev->product_id,
-        dev->path, dev->serial_number, interface_name, dev->interface_number,
-        dev->manufacturer_string, dev->product_string);
-}
-*/
-
 int test_chamber() {
 
     //Add your testing code.
 
     return 0;
-    }
+}
 
 int device_connection(){
     if (check_connection_ok) {
@@ -2937,24 +2824,6 @@ int device_connection(){
             return 0;
         }
     }
-    /*
-    //usb test
-    if (!handle_ok) {
-        hid_init();
-        struct hid_device_info *devs = hid_enumerate(0x057E, 0x200e);
-        if (devs){
-            usb_device_print(devs);
-            handle_l = hid_open_path(devs->path);
-            devs = devs->next;
-            handle = hid_open_path(devs->path);
-            printf("\nlol\n");
-
-            if (handle)
-                handle_ok = 4;
-        }
-        hid_free_enumeration(devs);
-    }
-    */
     return handle_ok;
 }
 
@@ -3063,15 +2932,15 @@ int Main(array<String^>^ args) {
 
     if (handle_ok == 1) {
         std::cout << "Joy-Con (L)" << std::endl;
-        std::cout << "Calibration of Joycons is not yet supported. Coming soon(tm)\nPress any key to quit." << std::endl;
-        getch();
-        return 0;
+        //std::cout << "Calibration of Joycons is not yet supported. Coming soon(tm)\nPress any key to quit." << std::endl;
+        //getch();
+        //return 0;
     }
     else if (handle_ok == 2) {
         std::cout << "Joy-Con (R)" << std::endl;
-        std::cout << "Calibration of Joycons is not yet supported. Coming soon(tm)\nPress any key to quit." << std::endl;
-        getch();
-        return 0;
+        //std::cout << "Calibration of Joycons is not yet supported. Coming soon(tm)\nPress any key to quit." << std::endl;
+        //getch();
+        //return 0;
     }
     else if (handle_ok == 3) {
         std::cout << "Pro Controller" << std::endl;
@@ -3154,13 +3023,13 @@ int Main(array<String^>^ args) {
     res = hid_read_timeout(handle, buf_cmd, 0, 120);
     
     // Collect samples to find average center and ideal deadzone.
-    printf("\n\nCalibrating joystick Center and Deadzone.\n\nGently wiggle the sticks around the center within the area where the stick spring is slack.\nWhen you are finished, press Y on the controller\n\n");
+    printf("\n\nCalibrating joystick Center and Deadzone.\n\nGently wiggle the sticks around the center within the area where the stick spring is slack.\nWhen you are finished, press Y on the controller or Left Dpad button.\n\n");
 
     min_lx = min_ly = min_rx = min_ry = 0xFFF;
     max_lx = max_ly = max_rx = max_ry = 0x000;
     u32 lx_center, ly_center, rx_center, ry_center;
     int i = 0;
-    while (buf_reply[3] != 0x01) {
+    while (buf_reply[3] != 0x01 && buf_reply[5] != 0x08) {
         res = hid_read_timeout(handle, buf_reply, sizeof(buf_reply), 200);
         if (res > 12) {
             u16 lx = buf_reply[6] | (u16)((buf_reply[7] & 0xF) << 8);
@@ -3198,11 +3067,11 @@ int Main(array<String^>^ args) {
     printf("\nCenters and deadzones found!\n");
 
     printf("\nCalibrating stick range.\n\n");
-    printf("Slowly spin each stick gently around the outer rim 3 times.\nWhen you're finished, press the controller's A button.\n\n");
+    printf("Slowly spin each stick gently around the outer rim 3 times.\nWhen you're finished, press the controller's A button or Right Dpad button.\n\n");
     // Collect stick samples, track min/max for each axis. Maybe Pull final result in ~1% of total possible range.
     min_lx = min_ly = min_rx = min_ry = 0xFFF;
     max_lx = max_ly = max_rx = max_ry = 0x000;
-    while (buf_reply[3] != 0x08) {
+    while (buf_reply[3] != 0x08 && buf_reply[5] != 0x04) {
         res = hid_read_timeout(handle, buf_reply, sizeof(buf_reply), 200);
         if (res > 12) {
             u16 lx = buf_reply[6] | (u16)((buf_reply[7] & 0xF) << 8);
@@ -3239,15 +3108,15 @@ write_cal_label:
             OUTER_PADDING = 0x050;
         }
     }
-    left_cal.xmin  = min_lx + OUTER_PADDING;
-    left_cal.ymin  = min_ly + OUTER_PADDING;
-    right_cal.xmin = min_rx + OUTER_PADDING;
-    right_cal.ymin = min_ry + OUTER_PADDING;
+    left_cal.xmin  = min(0xFFF, min_lx + OUTER_PADDING);
+    left_cal.ymin  = min(0xFFF, min_ly + OUTER_PADDING);
+    right_cal.xmin = min(0xFFF, min_rx + OUTER_PADDING);
+    right_cal.ymin = min(0xFFF, min_ry + OUTER_PADDING);
 
-    left_cal.xmax  = max_lx - OUTER_PADDING;
-    left_cal.ymax  = max_ly - OUTER_PADDING;
-    right_cal.xmax = max_rx - OUTER_PADDING;
-    right_cal.ymax = max_ry - OUTER_PADDING;
+    left_cal.xmax  = max(0, max_lx - OUTER_PADDING);
+    left_cal.ymax  = max(0, max_ly - OUTER_PADDING);
+    right_cal.xmax = max(0, max_rx - OUTER_PADDING);
+    right_cal.ymax = max(0, max_ry - OUTER_PADDING);
 
     u16 range_ratio_l = max(max_lx, max_ly) - min(min_lx, min_ly);
     u16 range_ratio_r = max(max_rx, max_ry) - min(min_rx, min_ry);
@@ -3257,7 +3126,7 @@ write_cal_label:
     printf("Range ratios: L(%03X)  R (%03X)\n", range_ratio_l, range_ratio_r);
 
     printf("Center (x,y): L(%03lX, %03lX)   R(%03lX, %03lX)\n", left_cal.xcenter, left_cal.ycenter, right_cal.xcenter, right_cal.ycenter);
-    printf("Deadzones: L(%02X)  L(%02X)\n", left_deadzone, right_deadzone);
+    printf("Deadzones: L(%02X)  R(%02X)\n", left_deadzone, right_deadzone);
 
     printf("\nWould you like to write this calibration to the controller? y/n:\n");
     if (getch() != 'y') {
@@ -3270,14 +3139,19 @@ write_cal_label:
 
 
     printf("\nWriting calibration to controller...\n");
-    res = write_left_stick_calibration(left_cal);
-    if (res != 0) {
-        printf("Failed to write left stick calibration.\n");
+    // Left joycon uses left-stick cal address, Right joycon uses right-stick cal address!
+    if (handle_ok == 3 || handle_ok == 1) {
+        res = write_left_stick_calibration(left_cal);
+        if (res != 0) {
+            printf("Failed to write left stick calibration.\n");
+        }
     }
     Sleep(100);
-    res = write_right_stick_calibration(right_cal);
-    if (res != 0) {
-        printf("Failed to write right stick calibration.\n");
+    if (handle_ok == 3 || handle_ok == 2) { // Only Pro controllers and right joycons have a right stick
+        res = write_right_stick_calibration(right_cal);
+        if (res != 0) {
+            printf("Failed to write right stick calibration.\n");
+        }
     }
     Sleep(100);
 
@@ -3293,13 +3167,25 @@ write_cal_label:
     stick_params_right[1] = (right_deadzone & 0xF00) >> 8 | ((range_ratio_r & 0xF) << 4);
     stick_params_right[2] = (range_ratio_r & 0xFF0) >> 4;
 
-    res = write_spi_data(0x6089, sizeof(stick_params_left), stick_params_left);
-    if (res != 0) {
-        printf("Failed to write left stick params.\n");
+    // Save left stick params
+    if (handle_ok == 3 || handle_ok == 1) {
+        res = write_spi_data(0x6089, sizeof(stick_params_left), stick_params_left);
+        if (res != 0) {
+            printf("Failed to write left stick params.\n");
+        }
     }
-    res = write_spi_data(0x609B, sizeof(stick_params_right), stick_params_right);
-    if (res != 0) {
-        printf("Failed to write right stick params.\n");
+    // Save right stick params
+    if (handle_ok == 3) {
+        res = write_spi_data(0x609B, sizeof(stick_params_right), stick_params_right);
+        if (res != 0) {
+            printf("Failed to write right stick params.\n");
+        }
+    } else if (handle_ok == 2) {
+        res = write_spi_data(0x6089, sizeof(stick_params_right), stick_params_right);
+        // IDK why the right joycon uses left stick param address but right stick calibration address *shrug*
+        if (res != 0) {
+            printf("Failed to write right stick params.\n");
+        }
     }
 
     Sleep(100);
