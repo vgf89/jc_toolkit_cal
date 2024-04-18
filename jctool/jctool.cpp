@@ -5,6 +5,8 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <iostream>
+#include <conio.h>
 // #define NOMINMAX
 #include <Windows.h>
 
@@ -840,7 +842,7 @@ int button_test() {
         stick_cal_x_l[0] = stick_cal_x_l[1] - ((factory_stick_cal[7] << 8) & 0xF00 | factory_stick_cal[6]);
         stick_cal_y_l[0] = stick_cal_y_l[1] - ((factory_stick_cal[8] << 4) | (factory_stick_cal[7] >> 4));
         stick_cal_x_l[2] = stick_cal_x_l[1] + ((factory_stick_cal[1] << 8) & 0xF00 | factory_stick_cal[0]);
-        stick_cal_y_l[2] = stick_cal_y_l[1] + ((factory_stick_cal[2] << 4) | (factory_stick_cal[2] >> 4));
+        stick_cal_y_l[2] = stick_cal_y_l[1] + ((factory_stick_cal[2] << 4) | (factory_stick_cal[1] >> 4)); // FIXME: Is this right?
         FormJoy::myform1->textBox_lstick_fcal->Text = String::Format(L"L Stick Factory:\r\nCenter X,Y: ({0:X3}, {1:X3})\r\nX: [{2:X3} - {4:X3}] Y: [{3:X3} - {5:X3}]",
             stick_cal_x_l[1], stick_cal_y_l[1], stick_cal_x_l[0], stick_cal_y_l[0], stick_cal_x_l[2], stick_cal_y_l[2]);
     }
@@ -2956,43 +2958,374 @@ int device_connection(){
     return handle_ok;
 }
 
+struct DECODED_FACTORY_STICK_CAL {
+    u16 xmax;
+    u16 ymax;
+    u16 xcenter;
+    u16 ycenter;
+    u16 xmin;
+    u16 ymin;
+};
+
+
+int write_left_stick_calibration(struct DECODED_FACTORY_STICK_CAL left_cal) {
+    u16 data_l[6] = { 0 };
+    // Convert left_cal back into data_l array
+    data_l[0] = left_cal.xmax - left_cal.xcenter;
+    data_l[1] = left_cal.ymax - left_cal.ycenter;
+    data_l[2] = left_cal.xcenter;
+    data_l[3] = left_cal.ycenter;
+    data_l[4] = left_cal.xcenter - left_cal.xmin;
+    data_l[5] = left_cal.ycenter - left_cal.ymin;
+    // print data_l
+    //printf("\nLeft stick calibration data: %04X %04X %04X %04X %04X %04X\n", data_l[0], data_l[1], data_l[2], data_l[3], data_l[4], data_l[5]);
+    // Convert data_l array back into left_stick_cal
+    u8 left_stick_cal[0x9] = { 0 };
+    left_stick_cal[0] = data_l[0] & 0xFF;
+    left_stick_cal[1] = ((data_l[0] >> 8) & 0x0F) | ((data_l[1] << 4) & 0xF0);
+    left_stick_cal[2] = (data_l[1] >> 4) & 0xFF;
+    left_stick_cal[3] = (data_l[2] & 0xFF);
+    left_stick_cal[4] = ((data_l[2] >> 8) & 0x0F) | ((data_l[3] << 4) & 0xF0);
+    left_stick_cal[5] = (data_l[3] >> 4) & 0xFF;
+    left_stick_cal[6] = (data_l[4] & 0xFF);
+    left_stick_cal[7] = ((data_l[4] >> 8) & 0x0F) | ((data_l[5] << 4) & 0xF0);
+    left_stick_cal[8] = (data_l[5] >> 4) & 0xFF;
+    // Print left_stick_cal
+    //printf("\nLeft stick calibration data: %02X %02X %02X %02X %02X %02X %02X %02X %02X\n", left_stick_cal[0], left_stick_cal[1], left_stick_cal[2], left_stick_cal[3], left_stick_cal[4], left_stick_cal[5], left_stick_cal[7], left_stick_cal[8]);
+    // Write out to SPI
+    return write_spi_data(0x603D, sizeof(left_stick_cal), left_stick_cal);
+}
+
+int write_right_stick_calibration(struct DECODED_FACTORY_STICK_CAL right_cal) {
+    u16 data_r[6] = { 0 };
+    // Convert right_cal to data_r
+    data_r[0] = right_cal.xcenter;
+    data_r[1] = right_cal.ycenter;
+    data_r[2] = right_cal.xcenter - right_cal.xmin;
+    data_r[3] = right_cal.ycenter - right_cal.ymin;
+    data_r[4] = right_cal.xmax - right_cal.xcenter;
+    data_r[5] = right_cal.ymax - right_cal.ycenter;
+    // Convert data_r array back into right_stick_cal
+    u8 right_stick_cal[0x9] = { 0 };
+    right_stick_cal[0] = data_r[0] & 0xFF;
+    right_stick_cal[1] = ((data_r[0] >> 8) & 0x0F) | ((data_r[1] << 4) & 0xF0);
+    right_stick_cal[2] = (data_r[1] >> 4) & 0xFF;
+    right_stick_cal[3] = (data_r[2] & 0xFF);
+    right_stick_cal[4] = ((data_r[2] >> 8) & 0x0F) | ((data_r[3] << 4) & 0xF0);
+    right_stick_cal[5] = (data_r[3] >> 4) & 0xFF;
+    right_stick_cal[6] = (data_r[4] & 0xFF);
+    right_stick_cal[7] = ((data_r[4] >> 8) & 0x0F) | ((data_r[5] << 4) & 0xF0);
+    right_stick_cal[8] = (data_r[5] >> 4) & 0xFF;
+    // Write out to SPI
+    return write_spi_data(0x6046, sizeof(right_stick_cal), right_stick_cal);
+}
+
 [STAThread]
 int Main(array<String^>^ args) {
-    /*
+    
     BOOL chk = AllocConsole();
     if (chk) {
         freopen("CONOUT$", "w", stdout);
     }
-    */
+    
+    bool raw_calibration = false;
     check_connection_ok = true;
     while (!device_connection()) {
-        if (MessageBox::Show(
-            L"The device is not paired or the device was disconnected!\n\n" +
-            L"To pair:\n  1. Press and hold the sync button until the leds are on\n" +
-            L"  2. Pair the Bluetooth controller in Windows\n\nTo connect again:\n" +
-            L"  1. Press a button on the controller\n  (If this doesn\'t work, re-pair.)\n\n" +
-            L"To re-pair:\n  1. Go to 'Settings -> Devices' or Devices and Printers'\n" +
-            L"  2. Remove the controller\n  3. Follow the pair instructions",
-            L"CTCaer's Joy-Con Toolkit - Connection Error!",
-            MessageBoxButtons::RetryCancel, MessageBoxIcon::Stop) == System::Windows::Forms::DialogResult::Cancel)
-            return 1;
+        printf(
+            "\nThe device is not paired or the device was disconnected!\n\n"\
+            "To pair:\n  1. Press and hold the sync button until the leds are on\n"\
+            "  2. Pair the Bluetooth controller in Windows\n\nTo connect again:\n"\
+            "  1. Press a button on the controller\n  (If this doesn\'t work, re-pair.)\n\n"\
+            "To re-pair:\n  1. Go to 'Settings -> Devices' or Devices and Printers'\n"\
+            "  2. Remove the controller\n  3. Follow the pair instructions"\
+            "CTCaer's Joy-Con Toolkit - Connection Error!\n\n"\
+            "Press any key to Retry, or close the window to quit."
+        );
+        getch();
+        printf("\n\n");
     }
     // Enable debugging
     if (args->Length > 0) {
-        if (args[0] == "-d")
-            enable_traffic_dump = true; // Enable hid_write/read logging to text file
-        else if (args[0] == "-f")
+        if (args[0] == "-f")
             check_connection_ok = false;   // Don't check connection after the 1st successful one
     }
 
     timming_byte = 0x0;
 
+    std::cout << "Your controller is connected!" << std::endl;
+    unsigned char device_info[10];
+    memset(device_info, 0, sizeof(device_info));
+    get_device_info(device_info);
+
+    std::string devinfo1 = msclr::interop::marshal_as< std::string >(String::Format("{0:X}.{1:X2}", device_info[0], device_info[1]));
+    std::string devinfo2 = msclr::interop::marshal_as< std::string >(String::Format("{0:X2}:{1:X2}:{2:X2}:{3:X2}:{4:X2}:{5:X2}",
+        device_info[4], device_info[5], device_info[6], device_info[7], device_info[8], device_info[9]));
+
+    if (handle_ok == 1) {
+        std::cout << "Joy-Con (L)" << std::endl;
+        std::cout << "Calibration of Joycons is not yet supported. Coming soon(tm)\nPress any key to quit." << std::endl;
+        getch();
+        return 0;
+    }
+    else if (handle_ok == 2) {
+        std::cout << "Joy-Con (R)" << std::endl;
+        std::cout << "Calibration of Joycons is not yet supported. Coming soon(tm)\nPress any key to quit." << std::endl;
+        getch();
+        return 0;
+    }
+    else if (handle_ok == 3) {
+        std::cout << "Pro Controller" << std::endl;
+    }
+    else {
+        std::cout << "Something went wrong getting device info." << std::endl;
+        std::cout << "Press any key to quit." << std::endl;
+        getch();
+        return 0;
+
+    }
+
+    std::cout << "Firmware:" << devinfo1 << std::endl;
+    std::cout << "MAC Address:" << devinfo2 << std::endl;
+
+
+    printf("\nWarning: Some parameters in factory stick calibration do appear to be used properly on Windows.\nSpecifically, the stick deadzone seems to be applied *before* the center calibration, resulting in oddities near the deadzone.\nThis phenomenon does not appear on a real Nintendo Switch, so please test centering/deadzone there after calibration.\n\n");
+    printf("Would you like to calibrate your controller sticks? y/n: \n");
+    if (getch() != 'y') {
+        printf("Quitting. No changes have been made.\nPress any key to quit\n");
+        getch();
+        return 0;
+    }
+
+    printf("\nPress 1 to enter the calibration routine, \nor press 2 to flash a max-range 'raw' calibration (useful when physically aligning Hall Effect magnets).\n");
+    printf("\nIf you just installed new Hall Effect(HE) sticks, it is highly suggested to first flash the max-range calibration.\n");
+    char input = getch();
+    if (input == '1') {
+        printf("Beginning calibration routine...\n");
+    }
+    else if (input == '2') {
+        printf("Flasing max-range calibration...\n");
+        raw_calibration = true;
+    }
+    else {
+        printf("Quitting. No changes have been made.\nPress any key to quit\n");
+        getch();
+        return 0;
+    }
+
+
+
+    u8 left_stick_cal[0x9];
+    u8 right_stick_cal[0x9];
+    struct DECODED_FACTORY_STICK_CAL left_cal = { 0 };
+    struct DECODED_FACTORY_STICK_CAL right_cal = { 0 };
+    int res;
+    u8 buf_reply[0x170];
+    u32 min_lx, max_lx, min_ly, max_ly, min_rx, max_rx, min_ry, max_ry;
+    u8 left_deadzone, right_deadzone;
+
+
+
+    if (raw_calibration) {
+        printf("Flashing raw calibration.");
+        min_lx = min_ly = min_rx = min_ry = 0;
+        max_lx = max_ly = max_rx = max_ry = 0xfff;
+        left_cal.xmin = left_cal.ymin = right_cal.xmin = right_cal.ymin = 0;
+        left_cal.xmax = left_cal.ymax = right_cal.xmax = right_cal.ymax = 0xfff;
+        left_cal.xcenter = left_cal.ycenter = right_cal.xcenter = right_cal.ycenter = 0x7ff;
+        left_deadzone = right_deadzone = 0;
+        goto write_cal_label;
+    }
+
+    
+
+    printf("Release the sticks, then press any key.\n");
+    getch();
+    // Enable nxpad standard input report
+    u8 buf_cmd[49];
+    memset(buf_cmd, 0, sizeof(buf_cmd));
+    auto hdr = (brcm_hdr *)buf_cmd;
+    auto pkt = (brcm_cmd_01 *)(hdr + 1);
+    hdr->cmd = 0x01;
+    hdr->timer = timming_byte & 0xF;
+    timming_byte++;
+    pkt->subcmd = 0x03;
+    pkt->subcmd_arg.arg1 = 0x30;
+    res = hid_write(handle, buf_cmd, sizeof(buf_cmd));
+    res = hid_read_timeout(handle, buf_cmd, 0, 120);
+    
+    // Collect samples to find average center and ideal deadzone.
+    printf("\n\nCalibrating joystick Center and Deadzone.\n\nGently wiggle the sticks around the center within the area where the stick spring is slack.\nWhen you are finished, press Y on the controller\n\n");
+
+    min_lx = min_ly = min_rx = min_ry = 0xFFF;
+    max_lx = max_ly = max_rx = max_ry = 0x000;
+    u32 lx_center, ly_center, rx_center, ry_center;
+    int i = 0;
+    while (buf_reply[3] != 0x01) {
+        res = hid_read_timeout(handle, buf_reply, sizeof(buf_reply), 200);
+        if (res > 12) {
+            u16 lx = buf_reply[6] | (u16)((buf_reply[7] & 0xF) << 8);
+            u16 ly = (buf_reply[7] >> 4) | (buf_reply[8] << 4);
+            u16 rx = buf_reply[9] | (u16)((buf_reply[10] & 0xF) << 8);
+            u16 ry = (buf_reply[10] >> 4) | (buf_reply[11] << 4);
+            min_lx = lx < min_lx ? lx : min_lx;
+            max_lx = lx > max_lx ? lx : max_lx;
+            min_ly = ly < min_ly ? ly : min_ly;
+            max_ly = ly > max_ly ? ly : max_ly;
+            
+            min_rx = rx < min_rx ? rx : min_rx;
+            max_rx = rx > max_rx ? rx : max_rx;
+            min_ry = ry < min_ry ? ry : min_ry;
+            max_ry = ry > max_ry ? ry : max_ry;
+
+
+            printf("\rReading: L(%03X, %03X) R(%03X, %03X)   Min/Max L(%03X, %03X, %03X, %03X) R(%03X, %03X, %03Xm %03X)", lx, ly, rx, ry, min_lx, min_ly, max_lx, max_ly, min_rx, min_ry, max_rx, max_ry);
+        }
+    }
+    
+    const u8 EXTRA_INNER_DEADZONE = 0x00;
+    lx_center = (min_lx + max_lx) / 2;
+    ly_center = (min_ly + max_ly) / 2;
+    rx_center = (min_rx + max_rx) / 2;
+    ry_center = (min_ry + max_ry) / 2;
+    left_deadzone = ((max_lx - min_lx) / 2) + EXTRA_INNER_DEADZONE;
+    right_deadzone = ((max_rx - min_rx) / 2) + EXTRA_INNER_DEADZONE;
+    
+    left_cal.xcenter = lx_center;
+    left_cal.ycenter = ly_center;
+    right_cal.xcenter = rx_center;
+    right_cal.ycenter = ry_center;
+
+    printf("\nCenters and deadzones found!\n");
+
+    printf("\nCalibrating stick range.\n\n");
+    printf("Slowly spin each stick gently around the outer rim 3 times.\nWhen you're finished, press the controller's A button.\n\n");
+    // Collect stick samples, track min/max for each axis. Maybe Pull final result in ~1% of total possible range.
+    min_lx = min_ly = min_rx = min_ry = 0xFFF;
+    max_lx = max_ly = max_rx = max_ry = 0x000;
+    while (buf_reply[3] != 0x08) {
+        res = hid_read_timeout(handle, buf_reply, sizeof(buf_reply), 200);
+        if (res > 12) {
+            u16 lx = buf_reply[6] | (u16)((buf_reply[7] & 0xF) << 8);
+            u16 ly = (buf_reply[7] >> 4) | (buf_reply[8] << 4);
+            u16 rx = buf_reply[9] | (u16)((buf_reply[10] & 0xF) << 8);
+            u16 ry = (buf_reply[10] >> 4) | (buf_reply[11] << 4);
+            min_lx = lx < min_lx ? lx : min_lx;
+            max_lx = lx > max_lx ? lx : max_lx;
+            min_ly = ly < min_ly ? ly : min_ly;
+            max_ly = ly > max_ly ? ly : max_ly;
+            
+            min_rx = rx < min_rx ? rx : min_rx;
+            max_rx = rx > max_rx ? rx : max_rx;
+            min_ry = ry < min_ry ? ry : min_ry;
+            max_ry = ry > max_ry ? ry : max_ry;
+
+
+            printf("\rReading: L(%03X, %03X) R(%03X, %03X)   Min/Max L(%03X, %03X, %03X, %03X) R(%03X, %03X, %03Xm %03X)", lx, ly, rx, ry, min_lx, min_ly, max_lx, max_ly, min_rx, min_ry, max_rx, max_ry);
+        }
+
+    }
+
+    printf("\r");
+
+
+write_cal_label:
+    u16 OUTER_PADDING = 0;
+
+    if (!raw_calibration) {
+        printf("\n\nWould you like to add a small outer deadzone? This will ensure your stick does not\nundershoot the circularity test's outer circle but will slightly increase overall circularity error.\n");
+        printf("\ny/n: ");
+        input = getch();
+        if (input == 'y') {
+            OUTER_PADDING = 0x050;
+        }
+    }
+    left_cal.xmin  = min_lx + OUTER_PADDING;
+    left_cal.ymin  = min_ly + OUTER_PADDING;
+    right_cal.xmin = min_rx + OUTER_PADDING;
+    right_cal.ymin = min_ry + OUTER_PADDING;
+
+    left_cal.xmax  = max_lx - OUTER_PADDING;
+    left_cal.ymax  = max_ly - OUTER_PADDING;
+    right_cal.xmax = max_rx - OUTER_PADDING;
+    right_cal.ymax = max_ry - OUTER_PADDING;
+
+    u16 range_ratio_l = max(max_lx, max_ly) - min(min_lx, min_ly);
+    u16 range_ratio_r = max(max_rx, max_ry) - min(min_rx, min_ry);
+
+    printf("\n\nNew calibration values:\n\n");
+    printf("Min/Max: Lx(%03X, %03X) Ly(%03X, %03X)   Rx(%03X, %03X) Ry(%03X, %03X)\n", left_cal.xmin, left_cal.xmax, left_cal.ymin, left_cal.ymax, right_cal.xmin, right_cal.xmax, right_cal.ymin, right_cal.ymax);
+    printf("Range ratios: L(%03X)  R (%03X)\n", range_ratio_l, range_ratio_r);
+
+    printf("Center (x,y): L(%03lX, %03lX)   R(%03lX, %03lX)\n", left_cal.xcenter, left_cal.ycenter, right_cal.xcenter, right_cal.ycenter);
+    printf("Deadzones: L(%02X)  L(%02X)\n", left_deadzone, right_deadzone);
+
+    printf("\nWould you like to write this calibration to the controller? y/n:\n");
+    if (getch() != 'y') {
+        printf("No changes have been made. Press any key to quit.\n");
+        getch();
+        return 0;
+    }
+
+
+
+
+    printf("\nWriting calibration to controller...\n");
+    res = write_left_stick_calibration(left_cal);
+    if (res != 0) {
+        printf("Failed to write left stick calibration.\n");
+    }
+    Sleep(100);
+    res = write_right_stick_calibration(right_cal);
+    if (res != 0) {
+        printf("Failed to write right stick calibration.\n");
+    }
+    Sleep(100);
+
+    u8 stick_params_left[3];
+    u8 stick_params_right[3];
+    
+    stick_params_left[0] = left_deadzone & 0xFF;
+    stick_params_right[0] = right_deadzone & 0xFF;
+    
+    stick_params_left[1] = (left_deadzone & 0xF00) >> 8 | ((range_ratio_l & 0xF) << 4);
+    stick_params_left[2] = (range_ratio_l & 0xFF0) >> 4;
+
+    stick_params_right[1] = (right_deadzone & 0xF00) >> 8 | ((range_ratio_r & 0xF) << 4);
+    stick_params_right[2] = (range_ratio_r & 0xFF0) >> 4;
+
+    res = write_spi_data(0x6089, sizeof(stick_params_left), stick_params_left);
+    if (res != 0) {
+        printf("Failed to write left stick params.\n");
+    }
+    res = write_spi_data(0x609B, sizeof(stick_params_right), stick_params_right);
+    if (res != 0) {
+        printf("Failed to write right stick params.\n");
+    }
+
+    Sleep(100);
+    printf("COMPLETE!\n");
+    if (raw_calibration) {
+        printf("A max-range 'raw' calibration has been flashed. Please disconnect and reconnect your controller.\n");
+        printf("Then go to Gampad Tester and run a circularity test with the top controller shell on.\n");
+        printf("If the whole output range does not fit inside the circularity test circle, you need to adjust your magnet positions.\n");
+        printf("Once as much of the stick output fits inside the circle as possible, re-run this tool with option 1 to run stick calibration\n\n");
+    }
+    else {
+        printf("Calibration finished!\nNote: On PC, stick inputs may appear strange near the deadzone.\nPlease test center/deadzone on a Nintendo Switch.\n\n");
+    }
+    printf("Press any key to quit.\n");
+
+    getch();
+    return 0;
+    
+
+
     //test_chamber();
 
-    Application::EnableVisualStyles();
+    /*Application::EnableVisualStyles();
     Application::SetCompatibleTextRenderingDefault(false);
 
-    CppWinFormJoy::FormJoy^  myform1 = gcnew FormJoy();
+    CppWinFormJoy::FormJoy^  myform1 = gcnew FormJoy();*/
 
     /*
     //usb test
@@ -3010,7 +3343,7 @@ int Main(array<String^>^ args) {
     hid_exit();
     */
 
-    Application::Run(myform1);
+    //Application::Run(myform1);
 
     return 0;
 }

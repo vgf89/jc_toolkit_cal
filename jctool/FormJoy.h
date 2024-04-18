@@ -354,6 +354,7 @@ public ref class FormJoy : public System::Windows::Forms::Form
     private: System::Windows::Forms::NumericUpDown^  numeric_StickParamDeadzone;
     private: System::Windows::Forms::Label^  lbl_rangeReatio;
     private: System::Windows::Forms::NumericUpDown^  numeric_StickParamRangeRatio;
+    private: System::Windows::Forms::NumericUpDown^ numeric_StickParamCenter;
     private: System::Windows::Forms::Label^  lbl_editStickDevHelp;
     private: System::Windows::Forms::Label^  lbl_proStickHelp;
     private: System::Windows::Forms::Label^  lbl_mainStickHelp;
@@ -579,6 +580,7 @@ public ref class FormJoy : public System::Windows::Forms::Form
             this->btn_writeStickParams = (gcnew System::Windows::Forms::Button());
             this->lbl_rangeReatio = (gcnew System::Windows::Forms::Label());
             this->numeric_StickParamRangeRatio = (gcnew System::Windows::Forms::NumericUpDown());
+            this->numeric_StickParamCenter = (gcnew System::Windows::Forms::NumericUpDown());
             this->lbl_deadzone = (gcnew System::Windows::Forms::Label());
             this->numeric_StickParamDeadzone = (gcnew System::Windows::Forms::NumericUpDown());
             this->grpBox_Color->SuspendLayout();
@@ -645,6 +647,7 @@ public ref class FormJoy : public System::Windows::Forms::Form
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numeric_StickParamRangeRatio2))->BeginInit();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numeric_StickParamDeadzone2))->BeginInit();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numeric_StickParamRangeRatio))->BeginInit();
+            (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numeric_StickParamCenter))->BeginInit();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->numeric_StickParamDeadzone))->BeginInit();
             this->SuspendLayout();
             // 
@@ -2740,7 +2743,7 @@ public ref class FormJoy : public System::Windows::Forms::Form
             this->chkBox_IRDimLeds->RightToLeft = System::Windows::Forms::RightToLeft::No;
             this->chkBox_IRDimLeds->Size = System::Drawing::Size(195, 21);
             this->chkBox_IRDimLeds->TabIndex = 27;
-            this->chkBox_IRDimLeds->Text = L"Near/Wide  (130°)  Leds 3/4";
+            this->chkBox_IRDimLeds->Text = L"Near/Wide  (130ï¿½)  Leds 3/4";
             // 
             // chkBox_IRBrightLeds
             // 
@@ -2756,7 +2759,7 @@ public ref class FormJoy : public System::Windows::Forms::Form
             this->chkBox_IRBrightLeds->RightToLeft = System::Windows::Forms::RightToLeft::No;
             this->chkBox_IRBrightLeds->Size = System::Drawing::Size(195, 21);
             this->chkBox_IRBrightLeds->TabIndex = 26;
-            this->chkBox_IRBrightLeds->Text = L"Far/Narrow   (75°)  Leds 1/2";
+            this->chkBox_IRBrightLeds->Text = L"Far/Narrow   (75ï¿½)  Leds 1/2";
             // 
             // grpBox_IRRes
             // 
@@ -3769,6 +3772,7 @@ public ref class FormJoy : public System::Windows::Forms::Form
             this->grpBox_StickDevParam->Controls->Add(this->btn_writeStickParams);
             this->grpBox_StickDevParam->Controls->Add(this->lbl_rangeReatio);
             this->grpBox_StickDevParam->Controls->Add(this->numeric_StickParamRangeRatio);
+            this->grpBox_StickDevParam->Controls->Add(this->numeric_StickParamCenter);
             this->grpBox_StickDevParam->Controls->Add(this->lbl_deadzone);
             this->grpBox_StickDevParam->Controls->Add(this->numeric_StickParamDeadzone);
             this->grpBox_StickDevParam->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
@@ -3887,6 +3891,20 @@ public ref class FormJoy : public System::Windows::Forms::Form
             this->numeric_StickParamRangeRatio->TabIndex = 59;
             this->numeric_StickParamRangeRatio->TextAlign = System::Windows::Forms::HorizontalAlignment::Center;
             this->numeric_StickParamRangeRatio->UpDownAlign = System::Windows::Forms::LeftRightAlignment::Left;
+
+            //
+            // numeric_StickParamCenter
+            //
+            this->numeric_StickParamCenter->Hexadecimal = true;
+            this->numeric_StickParamCenter->Location = System::Drawing::Point(134, 51);
+            this->numeric_StickParamCenter->Maximum = System::Decimal(gcnew cli::array< System::Int32 >(4) { 0xfff, 0, 0, 0 });
+            this->numeric_StickParamCenter->Name = L"numeric_StickParamCenter";
+            this->numeric_StickParamCenter->Size = System::Drawing::Size(62, 25);
+            this->numeric_StickParamCenter->TextAlign = System::Windows::Forms::HorizontalAlignment::Center;
+            this->numeric_StickParamCenter->UpDownAlign = System::Windows::Forms::LeftRightAlignment::Left;
+
+
+
             // 
             // lbl_deadzone
             // 
@@ -6098,7 +6116,7 @@ public ref class FormJoy : public System::Windows::Forms::Form
         this->lbl_IRStatus->Text = "Status: Configuring";
         Application::DoEvents();
 
-        // The IR camera lens has a FoV of 123°. The IR filter is a NIR 850nm wavelength pass filter.
+        // The IR camera lens has a FoV of 123ï¿½. The IR filter is a NIR 850nm wavelength pass filter.
 
         // Resolution config register and no of packets expected
         // The sensor supports a max of Binning [4 x 2] and max Skipping [4 x 4]
@@ -6136,11 +6154,11 @@ public ref class FormJoy : public System::Windows::Forms::Form
 
         // Enable IR Leds. Only the following configurations are supported.
         if (this->chkBox_IRBrightLeds->Checked == true && this->chkBox_IRDimLeds->Checked == true)
-            ir_new_config.ir_leds = 0b000000; // Both Far/Narrow 75° and Near/Wide 130° Led groups are enabled.
+            ir_new_config.ir_leds = 0b000000; // Both Far/Narrow 75ï¿½ and Near/Wide 130ï¿½ Led groups are enabled.
         else if (this->chkBox_IRBrightLeds->Checked == true && this->chkBox_IRDimLeds->Checked == false)
-            ir_new_config.ir_leds = 0b100000; // Only Far/Narrow 75° Led group is enabled.
+            ir_new_config.ir_leds = 0b100000; // Only Far/Narrow 75ï¿½ Led group is enabled.
         else if (this->chkBox_IRBrightLeds->Checked == false && this->chkBox_IRDimLeds->Checked == true)
-            ir_new_config.ir_leds = 0b010000; // Only Near/Wide 130° Led group is enabled.
+            ir_new_config.ir_leds = 0b010000; // Only Near/Wide 130ï¿½ Led group is enabled.
         else if (this->chkBox_IRBrightLeds->Checked == false && this->chkBox_IRDimLeds->Checked == false)
             ir_new_config.ir_leds = 0b110000; // Both groups disabled
 
@@ -6510,6 +6528,69 @@ public ref class FormJoy : public System::Windows::Forms::Form
             this->lbl_proStickHelp->Enabled              = true;
         }
         grpBox_StickDevParam->Enabled = true;
+
+        // Stick Factory Cal Values (I think this is writable too?)
+        u8 factory_stick_cal[0x12]; // Indexes: Left Stick: 0-8, Right Stick: 9-17
+        get_spi_data(0x603D, 0x12, factory_stick_cal);
+        Sleep(100);
+        if (handle_ok != 2) {
+            /*
+            struct factory_stick_cal_field {
+                u16 lxmax:12; // 12 bits, bytes [0,1.5)
+                u16 lymax:12; // 24 bits, bytes [1,5-3)
+                u16 lxc:12; // 36 bits, bytes [3,4.5)
+                u16 lyc:12; // 48 bits, bytes  [4,5-6)
+                u16 lxmin:12; // 60 bits, bytes [6,7.5)
+                u16 lymin:12; // 72 bits, bytes [7.5,9)
+            }
+            */
+
+            // c means center
+            u16 lxc, lxmin, lxmax, lyc, lymin, lymax = 0;
+            lxc =         ((factory_stick_cal[3]         & 0x0FF) | ((factory_stick_cal[4] << 8) & 0xF00));
+            lyc =         (((factory_stick_cal[4] >> 4)  & 0x0FF) | ((factory_stick_cal[5] << 4) & 0xF00));
+            lxmax = lxc + ((factory_stick_cal[0]         & 0x0FF) | ((factory_stick_cal[1] << 8) & 0xF00)); // Absolute min/max. It's stored in spi as an offset.
+            lymax = lyc + (((factory_stick_cal[1] >> 4)  & 0x0FF) | ((factory_stick_cal[2] << 4) & 0xF00));
+            lxmin = lxc - (((factory_stick_cal[6])       & 0x0FF) | ((factory_stick_cal[7] << 8) & 0xF00));
+            lymin = lyc - (((factory_stick_cal[8] << 4)  & 0xF00) | ((factory_stick_cal[7] >> 4) & 0x0FF));
+
+
+            printf("Stick Cal: %03x %03x %03x %03x %03x %03x\n", lxc, lxmin, lxmax, lyc, lymin, lymax);
+
+            // Manual calibration test
+            // Default/uncalibrated state should be: middle=0x7FF, min=0x000, max=0xFFF
+            lxc = 0x7DF;
+            lxmin = -(0x053 - lxc); // Note: Stored in controller as offset from center
+            lxmax = 0xf45 - lxc;
+            lyc = 0x702;
+            lymin = -(0x053 - lyc);
+            lymax = 0xE5F - lyc;
+
+
+            // Write vals back into factory_stick_cal
+            // lx
+            factory_stick_cal[0] = (u8)(lxmax & 0x0FF);
+            factory_stick_cal[1] = (u8)((lxmax >> 8) & 0x00F) | (u8)((lymax << 4) & 0xFF0);
+            factory_stick_cal[2] = (factory_stick_cal[2] & 0x0F) | ((lymax >> 4) & 0xF0);
+            factory_stick_cal[3] = (u8)(lxc & 0x0FF);
+            factory_stick_cal[4] = (u8)(((lxc >> 8) & 0x00F) | (lyc << 4) & 0xFF0);
+            factory_stick_cal[5] = (u8)((lyc >> 4) & 0x0FF);
+            factory_stick_cal[6] = (u8)(lxmin & 0x0FF);
+            factory_stick_cal[7] = (u8)((lxmin >> 8) & 0x00F) | (u8)((lymin << 4) & 0xFF0);
+            factory_stick_cal[8] = (u8)((lymin >> 4) & 0x0FF);
+
+
+
+            write_spi_data(0x603D, sizeof(factory_stick_cal), factory_stick_cal);
+            Sleep(100);
+        }
+        else {
+
+        }
+        if (handle_ok != 1) {
+
+        }
+
         
         // Enable write buttons
         this->btn_writeStickParams->Enabled = true;
