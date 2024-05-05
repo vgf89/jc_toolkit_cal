@@ -2957,7 +2957,7 @@ int Main(array<String^>^ args) {
     std::cout << "MAC Address:" << devinfo2 << std::endl;
 
 
-    printf("\nWarning: Some parameters in factory stick calibration do appear to be used properly on Windows.\nSpecifically, the stick deadzone seems to be applied *before* the center calibration, resulting in oddities near the deadzone.\nThis phenomenon does not appear on a real Nintendo Switch, so please test centering/deadzone there after calibration.\n\n");
+    printf("\nWarning: Some parameters in factory stick calibration appear to be used incorrectly on Windows.\nSpecifically, the stick deadzone seems to be applied *before* the center calibration, resulting in oddities near the deadzone.\nThis phenomenon does not appear on a real Nintendo Switch, so please test centering/deadzone there after running this calibration.\n\n");
     printf("Would you like to calibrate your controller sticks? y/n: \n");
     if (getch() != 'y') {
         printf("Quitting. No changes have been made.\nPress any key to quit\n");
@@ -3101,7 +3101,7 @@ write_cal_label:
     u16 OUTER_PADDING = 0;
 
     if (!raw_calibration) {
-        printf("\n\nWould you like to add a small outer deadzone? This will ensure your stick does not\nundershoot the circularity test's outer circle but will slightly increase overall circularity error.\n");
+        printf("\n\nWould you like to add a small outer deadzone? This will help your stick to not\nundershoot the circularity test's outer circle but will slightly increase overall circularity error.\n");
         printf("\ny/n: ");
         input = getch();
         if (input == 'y') {
@@ -3122,11 +3122,17 @@ write_cal_label:
     u16 range_ratio_r = max(max_rx, max_ry) - min(min_rx, min_ry);
 
     printf("\n\nNew calibration values:\n\n");
-    printf("Min/Max: Lx(%03X, %03X) Ly(%03X, %03X)   Rx(%03X, %03X) Ry(%03X, %03X)\n", left_cal.xmin, left_cal.xmax, left_cal.ymin, left_cal.ymax, right_cal.xmin, right_cal.xmax, right_cal.ymin, right_cal.ymax);
-    printf("Range ratios: L(%03X)  R (%03X)\n", range_ratio_l, range_ratio_r);
+    if (handle_ok == 1 || handle_ok == 3) {
+        printf("Left Stick\nMin/Max: X(%03X, %03X) Y(%03X, %03X)\nRatio: %03X, Center (x,y): (%03lX, %03lX), Deadzone: %02X\n\n",
+            left_cal.xmin, left_cal.xmax, left_cal.ymin, left_cal.ymax,
+            range_ratio_l, left_cal.xcenter, left_cal.ycenter, left_deadzone);
+    }
+    if (handle_ok == 2 || handle_ok == 3) {
+        printf("Right Stick\nMin/Max: X(%03X, %03X) Y(%03X, %03X)\nRatio: %03X, Center (x,y): (%03lX, %03lX), Deadzone: %02X\n\n",
+            right_cal.xmin, right_cal.xmax, right_cal.ymin, right_cal.ymax,
+            range_ratio_r, right_cal.xcenter, right_cal.ycenter, right_deadzone);
+    }
 
-    printf("Center (x,y): L(%03lX, %03lX)   R(%03lX, %03lX)\n", left_cal.xcenter, left_cal.ycenter, right_cal.xcenter, right_cal.ycenter);
-    printf("Deadzones: L(%02X)  R(%02X)\n", left_deadzone, right_deadzone);
 
     printf("\nWould you like to write this calibration to the controller? y/n:\n");
     if (getch() != 'y') {
