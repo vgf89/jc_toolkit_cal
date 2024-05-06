@@ -2,7 +2,7 @@
 
 This is currently a fork of https://github.com/CTCaer/jc_toolkit and turns it into a simple command line tool for calibrating Switch controllers.
 
-BEFORE USING THIS TOOL, ***PLEASE BACKUP YOUR SPI FLASH*** using the original https://github.com/CTCaer/jc_toolkit
+BEFORE USING THIS TOOL, ***PLEASE BACKUP YOUR SPI FLASH*** using the original https://github.com/CTCaer/jc_toolkit. If you ever want to revert changes made by this calibration tool, you will need to restore from your spi flash backup.
 
 ## Important warning:
 
