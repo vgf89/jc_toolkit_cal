@@ -2889,6 +2889,17 @@ int write_right_stick_calibration(struct DECODED_FACTORY_STICK_CAL right_cal) {
     return write_spi_data(0x6046, sizeof(right_stick_cal), right_stick_cal);
 }
 
+bool yesorno() {
+    char in = 0;
+    while (in != 'y' && in != 'n') {
+        in = getch();
+    }
+    if (in == 'y') {
+        return true;
+    }
+    return false;
+}
+
 [STAThread]
 int Main(array<String^>^ args) {
     
@@ -2959,7 +2970,7 @@ int Main(array<String^>^ args) {
 
     printf("\nWarning: Some parameters in factory stick calibration appear to be used incorrectly on Windows.\nSpecifically, the stick deadzone seems to be applied *before* the center calibration, resulting in oddities near the deadzone.\nThis phenomenon does not appear on a real Nintendo Switch, so please test centering/deadzone there after running this calibration.\n\n");
     printf("Would you like to calibrate your controller sticks? y/n: \n");
-    if (getch() != 'y') {
+    if (yesorno() == false) {
         printf("Quitting. No changes have been made.\nPress any key to quit\n");
         getch();
         return 0;
@@ -3103,9 +3114,9 @@ write_cal_label:
     if (!raw_calibration) {
         printf("\n\nWould you like to add a small outer deadzone? This will help your stick to not\nundershoot the circularity test's outer circle but will slightly increase overall circularity error.\n");
         printf("\ny/n: ");
-        input = getch();
-        if (input == 'y') {
+        if (yesorno() == true) {
             OUTER_PADDING = 0x050;
+            printf("\nOuter deadzone addded\n");
         }
     }
     left_cal.xmin  = min(0xFFF, min_lx + OUTER_PADDING);
@@ -3135,7 +3146,7 @@ write_cal_label:
 
 
     printf("\nWould you like to write this calibration to the controller? y/n:\n");
-    if (getch() != 'y') {
+    if (yesorno() == false) {
         printf("No changes have been made. Press any key to quit.\n");
         getch();
         return 0;
