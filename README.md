@@ -29,7 +29,7 @@ Again, please ***BACKUP YOUR SPI FLASH FIRST USING CTCaer's JOYCON TOOLKIT***.
 
 ## References:
 
-**Official forum** and **Binary releases**: https://gbatemp.net/threads/tool-joy-con-toolkit-v1-0.478560/
+**Official forum** for Joycon Toolkit (use this to backup your SPI Flash): https://gbatemp.net/threads/tool-joy-con-toolkit-v1-0.478560/
 
 **Protocol reverse engineering**: https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering
 
