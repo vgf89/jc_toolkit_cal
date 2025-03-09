@@ -103,70 +103,76 @@ void AnalogStickCalc(
 }
 
 int get_spi_data(u32 offset, const u16 read_len, u8 *test_buf) {
-    int res;
     u8 buf[0x100];
-    while (1) {
+    int res;
+    
+    do {
+        // Prepare command buffer
         memset(buf, 0, sizeof(buf));
         auto hdr = (brcm_hdr *)buf;
         auto pkt = (brcm_cmd_01 *)(hdr + 1);
+        
+        // Set up header and packet
         hdr->cmd = 0x01;
         hdr->timer = timming_byte & 0xF;
         timming_byte++;
         pkt->subcmd = 0x10;
         pkt->spi_data.offset = offset;
         pkt->spi_data.size = read_len;
-        res = hid_write(handle, buf, sizeof(*hdr) + sizeof(*pkt));
-
+        
+        // Send command
+        hid_write(handle, buf, sizeof(*hdr) + sizeof(*pkt));
+        
+        // Read response
         res = hid_read_timeout(handle, buf, 0, 200);
-        if (res == 0)
-            continue;
-
-        if ((*(u16*)&buf[0xD] == offset) && (*(u16*)&buf[0xF] == read_len)) {
-            break;
-        }
-    }
+    } while (res == 0 || *(u16*)&buf[0xD] != offset || *(u16*)&buf[0xF] != read_len);
+    
+    // Copy data if we got enough bytes
     if (res >= 0x14 + read_len) {
-        for (int i = 0; i < read_len; i++) {
-            test_buf[i] = buf[0x14 + i];
-        }
+        memcpy(test_buf, &buf[0x14], read_len);
     }
+    
     return 0;
 }
-
 int write_spi_data(u32 offset, const u16 write_len, u8* test_buf) {
-    int res;
     u8 buf[49];
-    int error_writing = 0;
-    while (1) {
+    const int MAX_ATTEMPTS = 20;
+    const int MAX_RETRIES = 8;
+    
+    for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++) {
+        // Prepare command buffer
         memset(buf, 0, sizeof(buf));
         auto hdr = (brcm_hdr*)buf;
         auto pkt = (brcm_cmd_01*)(hdr + 1);
+        
+        // Set up header and packet
         hdr->cmd = 1;
         hdr->timer = timming_byte & 0xF;
         timming_byte++;
         pkt->subcmd = 0x11;
         pkt->spi_data.offset = offset;
         pkt->spi_data.size = write_len;
-        for (int i = 0; i < write_len; i++)
-            buf[0x10 + i] = test_buf[i];
-
-        res = hid_write(handle, buf, sizeof(buf));
-        int retries = 0;
-        while (1) {
-            res = hid_read_timeout(handle, buf, sizeof(buf), 64);
+        
+        // Copy data to send
+        memcpy(&buf[0x10], test_buf, write_len);
+        
+        // Send command
+        hid_write(handle, buf, sizeof(buf));
+        
+        // Wait for response
+        for (int retries = 0; retries < MAX_RETRIES; retries++) {
+            int res = hid_read_timeout(handle, buf, sizeof(buf), 64);
+            
+            // Check for success
             if (*(u16*)&buf[0xD] == 0x1180)
-                goto check_result;
-
-            retries++;
-            if (retries > 8 || res == 0)
+                return 0;
+                
+            if (res == 0)
                 break;
         }
-        error_writing++;
-        if (error_writing == 20)
-            return 1;
     }
-check_result:
-    return 0;
+    
+    return 1;  // Failed after maximum attempts
 }
 
 int get_device_info(u8* test_buf) {
@@ -474,7 +480,7 @@ int Main(array<String^>^ args) {
     int res;
     u8 buf_reply[0x170];
     u32 min_lx, max_lx, min_ly, max_ly, min_rx, max_rx, min_ry, max_ry;
-    u8 left_deadzone, right_deadzone;
+    u16 left_deadzone, right_deadzone;
 
 
 
@@ -535,7 +541,7 @@ int Main(array<String^>^ args) {
         }
     }
     
-    const u8 EXTRA_INNER_DEADZONE = 0x00;
+    const u16 EXTRA_INNER_DEADZONE = 0x00;
     lx_center = (min_lx + max_lx) / 2;
     ly_center = (min_ly + max_ly) / 2;
     rx_center = (min_rx + max_rx) / 2;
@@ -607,12 +613,12 @@ write_cal_label:
 
     printf("\n\nNew calibration values:\n\n");
     if (handle_ok == 1 || handle_ok == 3) {
-        printf("Left Stick\nMin/Max: X(%03X, %03X) Y(%03X, %03X)\nRatio: %03X, Center (x,y): (%03lX, %03lX), Deadzone: %02X\n\n",
+        printf("Left Stick\nMin/Max: X(%03X, %03X) Y(%03X, %03X)\nRatio: %03X, Center (x,y): (%03lX, %03lX), Deadzone: %03X\n\n",
             left_cal.xmin, left_cal.xmax, left_cal.ymin, left_cal.ymax,
             range_ratio_l, left_cal.xcenter, left_cal.ycenter, left_deadzone);
     }
     if (handle_ok == 2 || handle_ok == 3) {
-        printf("Right Stick\nMin/Max: X(%03X, %03X) Y(%03X, %03X)\nRatio: %03X, Center (x,y): (%03lX, %03lX), Deadzone: %02X\n\n",
+        printf("Right Stick\nMin/Max: X(%03X, %03X) Y(%03X, %03X)\nRatio: %03X, Center (x,y): (%03lX, %03lX), Deadzone: %03X\n\n",
             right_cal.xmin, right_cal.xmax, right_cal.ymin, right_cal.ymax,
             range_ratio_r, right_cal.xcenter, right_cal.ycenter, right_deadzone);
     }

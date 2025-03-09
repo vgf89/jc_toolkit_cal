@@ -29,22 +29,10 @@
     <ClInclude Include="jctool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FormJoy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Overrides.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tune.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="luts.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ir_sensor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hidapi_log.h">

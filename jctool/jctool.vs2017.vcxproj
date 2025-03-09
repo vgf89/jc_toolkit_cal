@@ -103,27 +103,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hidapi_log.h" />
-    <ClInclude Include="ir_sensor.h" />
     <ClInclude Include="jctool.h" />
-    <ClInclude Include="FormJoy.h">
-      <FileType>CppForm</FileType>
-    </ClInclude>
-    <ClInclude Include="luts.h" />
-    <ClInclude Include="tune.h" />
-    <ClInclude Include="Overrides.h">
-      <DependentUpon>FormJoy.h</DependentUpon>
-    </ClInclude>
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hidapi.h" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="FormJoy.resx">
-      <DependentUpon>FormJoy.h</DependentUpon>
-      <SubType>Designer</SubType>
-      <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CppWinFormJoy.FormJoy.resources</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="images.resx">
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CppWinFormJoy.images.resources</LogicalName>
     </EmbeddedResource>
@@ -136,11 +122,6 @@
   <ItemGroup>
     <Image Include="pro2.ico" />
     <Image Include="pro_small.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="jc_colorpicker\jcColorDialog.vs2017.csproj">
-      <Project>{22e08f67-4e40-4a92-876b-410ffd49b20e}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
