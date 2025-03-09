@@ -19,38 +19,14 @@ bool enable_traffic_dump = false;
 hid_device *handle;
 hid_device *handle_l;
 
-s16 uint16_to_int16(u16 a) {
-    s16 b;
-    if (a > 0x7FF) {
-        b = -((s16)(0xFFF - a));
-        b -= 1;
-    }
-    else {
-        b = (s16)a;
-    }
-    return b;
-}
-
-u16 int16_to_uint16(s16 a) {
-    u16 b;
-    if (a < 0) {
-        b = (u16)(0xFFF + a);
-        b += 1;
-    }
-    else {
-        b = (u16)a;
-    }
-    return b;
-}
-
-void decode_stick_params(u16 *decoded_stick_params, u8 *encoded_stick_params) {
-    decoded_stick_params[0] = (encoded_stick_params[1] << 8) & 0xF00 | encoded_stick_params[0];
-    decoded_stick_params[1] = (encoded_stick_params[2] << 4) | (encoded_stick_params[1] >> 4);
+void decode_stick_params(u16 *decoded_stick_params, u8 *encoded_stick_params) { 
+    decoded_stick_params[0] = ((encoded_stick_params[1] & 0xF) << 8) | encoded_stick_params[0];
+    decoded_stick_params[1] = (encoded_stick_params[2] << 4) | ((encoded_stick_params[1] & 0xF0) >> 4);
 }
 
 void encode_stick_params(u8 *encoded_stick_params, u16 *decoded_stick_params) {
     encoded_stick_params[0] =  decoded_stick_params[0] & 0xFF;
-    encoded_stick_params[1] = (decoded_stick_params[0] & 0xF00) >> 8 | (decoded_stick_params[1] & 0xF) << 4;
+    encoded_stick_params[1] = ((decoded_stick_params[0] & 0xF00) >> 8) | ((decoded_stick_params[1] & 0xF) << 4);
     encoded_stick_params[2] = (decoded_stick_params[1] & 0xFF0) >> 4;
 }
 
@@ -236,6 +212,7 @@ int device_connection() {
     return handle_ok;
 }
 
+
 struct DECODED_FACTORY_STICK_CAL {
     u16 xmax;
     u16 ymax;
@@ -256,17 +233,11 @@ int write_left_stick_calibration(struct DECODED_FACTORY_STICK_CAL left_cal) {
     data_l[5] = left_cal.ycenter - left_cal.ymin;
     // print data_l
     //printf("\nLeft stick calibration data: %04X %04X %04X %04X %04X %04X\n", data_l[0], data_l[1], data_l[2], data_l[3], data_l[4], data_l[5]);
-    // Convert data_l array back into left_stick_cal
+    // Pack 12 bit (within 16 bit) data_l array back into 8 bit left_stick_cal array
     u8 left_stick_cal[0x9] = { 0 };
-    left_stick_cal[0] = data_l[0] & 0xFF;
-    left_stick_cal[1] = ((data_l[0] >> 8) & 0x0F) | ((data_l[1] << 4) & 0xF0);
-    left_stick_cal[2] = (data_l[1] >> 4) & 0xFF;
-    left_stick_cal[3] = (data_l[2] & 0xFF);
-    left_stick_cal[4] = ((data_l[2] >> 8) & 0x0F) | ((data_l[3] << 4) & 0xF0);
-    left_stick_cal[5] = (data_l[3] >> 4) & 0xFF;
-    left_stick_cal[6] = (data_l[4] & 0xFF);
-    left_stick_cal[7] = ((data_l[4] >> 8) & 0x0F) | ((data_l[5] << 4) & 0xF0);
-    left_stick_cal[8] = (data_l[5] >> 4) & 0xFF;
+    encode_stick_params(&left_stick_cal[0], &data_l[0]);
+    encode_stick_params(&left_stick_cal[3], &data_l[2]);
+    encode_stick_params(&left_stick_cal[6], &data_l[4]);
     // Print left_stick_cal
     //printf("\nLeft stick calibration data: %02X %02X %02X %02X %02X %02X %02X %02X %02X\n", left_stick_cal[0], left_stick_cal[1], left_stick_cal[2], left_stick_cal[3], left_stick_cal[4], left_stick_cal[5], left_stick_cal[7], left_stick_cal[8]);
     // Write out to SPI
@@ -275,24 +246,20 @@ int write_left_stick_calibration(struct DECODED_FACTORY_STICK_CAL left_cal) {
 
 int write_right_stick_calibration(struct DECODED_FACTORY_STICK_CAL right_cal) {
     u16 data_r[6] = { 0 };
-    // Convert right_cal to data_r
+    // Param order is different for right stick
     data_r[0] = right_cal.xcenter;
     data_r[1] = right_cal.ycenter;
     data_r[2] = right_cal.xcenter - right_cal.xmin;
     data_r[3] = right_cal.ycenter - right_cal.ymin;
     data_r[4] = right_cal.xmax - right_cal.xcenter;
     data_r[5] = right_cal.ymax - right_cal.ycenter;
-    // Convert data_r array back into right_stick_cal
+
     u8 right_stick_cal[0x9] = { 0 };
-    right_stick_cal[0] = data_r[0] & 0xFF;
-    right_stick_cal[1] = ((data_r[0] >> 8) & 0x0F) | ((data_r[1] << 4) & 0xF0);
-    right_stick_cal[2] = (data_r[1] >> 4) & 0xFF;
-    right_stick_cal[3] = (data_r[2] & 0xFF);
-    right_stick_cal[4] = ((data_r[2] >> 8) & 0x0F) | ((data_r[3] << 4) & 0xF0);
-    right_stick_cal[5] = (data_r[3] >> 4) & 0xFF;
-    right_stick_cal[6] = (data_r[4] & 0xFF);
-    right_stick_cal[7] = ((data_r[4] >> 8) & 0x0F) | ((data_r[5] << 4) & 0xF0);
-    right_stick_cal[8] = (data_r[5] >> 4) & 0xFF;
+    encode_stick_params(&right_stick_cal[0], &data_r[0]);
+    encode_stick_params(&right_stick_cal[3], &data_r[2]);
+    encode_stick_params(&right_stick_cal[6], &data_r[4]);
+    // Print right_stick_cal
+    //printf("\nRight stick calibration data: %02X %02X %02X %02X %02X %02X %02X %02X %02X\n", right_stick_cal[0], right_stick_cal[1], right_stick_cal[2], right_stick_cal[3], right_stick_cal[4], right_stick_cal[5], right_stick_cal[7], right_stick_cal[8]);
     // Write out to SPI
     return write_spi_data(0x6046, sizeof(right_stick_cal), right_stick_cal);
 }
@@ -352,35 +319,6 @@ std::string get_sn(u32 offset, const u16 read_len) {
         return "Error!";
     }
     return test;
-}
-
-
-// crc-8-ccitt / polynomial 0x07 look up table
-static uint8_t mcu_crc8_table[256] = {
-    0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15, 0x38, 0x3F, 0x36, 0x31, 0x24, 0x23, 0x2A, 0x2D,
-    0x70, 0x77, 0x7E, 0x79, 0x6C, 0x6B, 0x62, 0x65, 0x48, 0x4F, 0x46, 0x41, 0x54, 0x53, 0x5A, 0x5D,
-    0xE0, 0xE7, 0xEE, 0xE9, 0xFC, 0xFB, 0xF2, 0xF5, 0xD8, 0xDF, 0xD6, 0xD1, 0xC4, 0xC3, 0xCA, 0xCD,
-    0x90, 0x97, 0x9E, 0x99, 0x8C, 0x8B, 0x82, 0x85, 0xA8, 0xAF, 0xA6, 0xA1, 0xB4, 0xB3, 0xBA, 0xBD,
-    0xC7, 0xC0, 0xC9, 0xCE, 0xDB, 0xDC, 0xD5, 0xD2, 0xFF, 0xF8, 0xF1, 0xF6, 0xE3, 0xE4, 0xED, 0xEA,
-    0xB7, 0xB0, 0xB9, 0xBE, 0xAB, 0xAC, 0xA5, 0xA2, 0x8F, 0x88, 0x81, 0x86, 0x93, 0x94, 0x9D, 0x9A,
-    0x27, 0x20, 0x29, 0x2E, 0x3B, 0x3C, 0x35, 0x32, 0x1F, 0x18, 0x11, 0x16, 0x03, 0x04, 0x0D, 0x0A,
-    0x57, 0x50, 0x59, 0x5E, 0x4B, 0x4C, 0x45, 0x42, 0x6F, 0x68, 0x61, 0x66, 0x73, 0x74, 0x7D, 0x7A,
-    0x89, 0x8E, 0x87, 0x80, 0x95, 0x92, 0x9B, 0x9C, 0xB1, 0xB6, 0xBF, 0xB8, 0xAD, 0xAA, 0xA3, 0xA4,
-    0xF9, 0xFE, 0xF7, 0xF0, 0xE5, 0xE2, 0xEB, 0xEC, 0xC1, 0xC6, 0xCF, 0xC8, 0xDD, 0xDA, 0xD3, 0xD4,
-    0x69, 0x6E, 0x67, 0x60, 0x75, 0x72, 0x7B, 0x7C, 0x51, 0x56, 0x5F, 0x58, 0x4D, 0x4A, 0x43, 0x44,
-    0x19, 0x1E, 0x17, 0x10, 0x05, 0x02, 0x0B, 0x0C, 0x21, 0x26, 0x2F, 0x28, 0x3D, 0x3A, 0x33, 0x34,
-    0x4E, 0x49, 0x40, 0x47, 0x52, 0x55, 0x5C, 0x5B, 0x76, 0x71, 0x78, 0x7F, 0x6A, 0x6D, 0x64, 0x63,
-    0x3E, 0x39, 0x30, 0x37, 0x22, 0x25, 0x2C, 0x2B, 0x06, 0x01, 0x08, 0x0F, 0x1A, 0x1D, 0x14, 0x13,
-    0xAE, 0xA9, 0xA0, 0xA7, 0xB2, 0xB5, 0xBC, 0xBB, 0x96, 0x91, 0x98, 0x9F, 0x8A, 0x8D, 0x84, 0x83,
-    0xDE, 0xD9, 0xD0, 0xD7, 0xC2, 0xC5, 0xCC, 0xCB, 0xE6, 0xE1, 0xE8, 0xEF, 0xFA, 0xFD, 0xF4, 0xF3
-};
-u8 mcu_crc8_calc(u8* buf, u8 size) {
-    u8 crc8 = 0x0;
-
-    for (int i = 0; i < size; ++i) {
-        crc8 = mcu_crc8_table[(u8)(crc8 ^ buf[i])];
-    }
-    return crc8;
 }
         
 [STAThread]
@@ -472,9 +410,6 @@ int Main(array<String^>^ args) {
     }
 
 
-
-    u8 left_stick_cal[0x9];
-    u8 right_stick_cal[0x9];
     struct DECODED_FACTORY_STICK_CAL left_cal = { 0 };
     struct DECODED_FACTORY_STICK_CAL right_cal = { 0 };
     int res;
@@ -608,8 +543,8 @@ write_cal_label:
     right_cal.xmax = max(0, max_rx - OUTER_PADDING);
     right_cal.ymax = max(0, max_ry - OUTER_PADDING);
 
-    u16 range_ratio_l = max(max_lx, max_ly) - min(min_lx, min_ly);
-    u16 range_ratio_r = max(max_rx, max_ry) - min(min_rx, min_ry);
+    u16 range_ratio_l = 0xE14;//max(max_lx, max_ly) - min(min_lx, min_ly); // 0xE14;
+    u16 range_ratio_r = 0xE14;//max(max_rx, max_ry) - min(min_rx, min_ry); // 0xE14;
 
     printf("\n\nNew calibration values:\n\n");
     if (handle_ok == 1 || handle_ok == 3) {
@@ -635,67 +570,45 @@ write_cal_label:
 
 
     printf("\nWriting calibration to controller...\n");
-    // Left joycon uses left-stick cal address, Right joycon uses right-stick cal address!
-    if (handle_ok == 3 || handle_ok == 1) {
-        res = write_left_stick_calibration(left_cal);
-        if (res != 0) {
-            printf("Failed to write left stick calibration.\n");
-        }
-    }
-    Sleep(100);
-    if (handle_ok == 3 || handle_ok == 2) { // Only Pro controllers and right joycons have a right stick
-        res = write_right_stick_calibration(right_cal);
-        if (res != 0) {
-            printf("Failed to write right stick calibration.\n");
-        }
-    }
-    Sleep(100);
 
     u8 stick_params_left[3];
     u8 stick_params_right[3];
     
-    stick_params_left[0] = left_deadzone & 0xFF;
-    stick_params_right[0] = right_deadzone & 0xFF;
+    u16 left_params[2] = { left_deadzone, range_ratio_l };
+    u16 right_params[2] = { range_ratio_r, right_deadzone}; // These are swapped, exactly like the calibration data itself. Undocumented behavior.
     
-    stick_params_left[1] = (left_deadzone & 0xF00) >> 8 | ((range_ratio_l & 0xF) << 4);
-    stick_params_left[2] = (range_ratio_l & 0xFF0) >> 4;
+    encode_stick_params(&stick_params_left[0], &left_params[0]);
+    encode_stick_params(&stick_params_right[0], &right_params[0]);
 
-    stick_params_right[1] = (right_deadzone & 0xF00) >> 8 | ((range_ratio_r & 0xF) << 4);
-    stick_params_right[2] = (range_ratio_r & 0xFF0) >> 4;
-
-    // Save left stick params
-    if (handle_ok == 3 || handle_ok == 1) {
-        res = write_spi_data(0x6089, sizeof(stick_params_left), stick_params_left);
-        if (res != 0) {
-            printf("Failed to write left stick params.\n");
-        }
+    // Save stick params
+    if (handle_ok == 1) { // Left joycon
+        memcpy(&right_cal, &left_cal, sizeof(DECODED_FACTORY_STICK_CAL));
+        memcpy(stick_params_right, stick_params_left, sizeof(stick_params_right));
+    } else if (handle_ok == 2) { // Right joycon
+        memcpy(&left_cal, &right_cal, sizeof(DECODED_FACTORY_STICK_CAL));
+        memcpy(stick_params_left, stick_params_right, sizeof(stick_params_left));
     }
-    // Save right stick params
-    if (handle_ok == 3) {
-        res = write_spi_data(0x609B, sizeof(stick_params_right), stick_params_right);
-        if (res != 0) {
-            printf("Failed to write right stick params.\n");
-        }
-    } else if (handle_ok == 2) {
-        res = write_spi_data(0x6089, sizeof(stick_params_right), stick_params_right);
-        // IDK why the right joycon uses left stick param address but right stick calibration address *shrug*
-        if (res != 0) {
-            printf("Failed to write right stick params.\n");
-        }
-    }
-
+    res = write_right_stick_calibration(right_cal);
+    res += write_spi_data(0x609B, sizeof(stick_params_right), stick_params_right);
     Sleep(100);
-    printf("COMPLETE!\n");
-    if (raw_calibration) {
-        printf("A max-range 'raw' calibration has been flashed. Please disconnect and reconnect your controller.\n");
-        printf("Then go to Gampad Tester and run a circularity test with the top controller shell on.\n");
-        printf("If the whole output range does not fit inside the circularity test circle, you need to adjust your magnet positions.\n");
-        printf("Once as much of the stick output fits inside the circle as possible, re-run this tool with option 1 to run stick calibration\n\n");
+    res += write_left_stick_calibration(left_cal);
+    res += write_spi_data(0x6089, sizeof(stick_params_left), stick_params_left);
+    Sleep(100);
+    if (res != 0) {
+        printf("ERROR: Failed to write right stick params!\n");
+    } else {
+        printf("COMPLETE!\n");
+        if (raw_calibration) {
+            printf("A max-range 'raw' calibration has been flashed. Please disconnect and reconnect your controller.\n");
+            printf("Then go to Gampad Tester and run a circularity test with the top controller shell on.\n");
+            printf("If the whole output range does not fit inside the circularity test circle, you need to adjust your magnet positions.\n");
+            printf("Once as much of the stick output fits inside the circle as possible, re-run this tool with option 1 to run stick calibration\n\n");
+        }
+        else {
+            printf("Calibration finished!\nNote: On PC, stick inputs may appear strange near the deadzone.\nPlease test center/deadzone on a Nintendo Switch.\n\n");
+        }
+        printf("Press any key to quit.\n");
     }
-    else {
-        printf("Calibration finished!\nNote: On PC, stick inputs may appear strange near the deadzone.\nPlease test center/deadzone on a Nintendo Switch.\n\n");
-    }
-    printf("Press any key to quit.\n");
 
     getch();
 

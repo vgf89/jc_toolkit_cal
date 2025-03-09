@@ -97,7 +97,6 @@ struct ir_image_config {
 
 #pragma pack(pop)
 
-extern s16 uint16_to_int16(u16 a);
 extern void decode_stick_params(u16 *decoded_stick_params, u8 *encoded_stick_params);
 extern void encode_stick_params(u8 *encoded_stick_params, u16 *decoded_stick_params);
 
@@ -116,11 +115,3 @@ bool check_connection_ok;
 
 u8 timming_byte;
 u8 ir_max_frag_no;
-
-namespace CppWinFormJoy {
-    class images
-    {
-        //For annoying designer..
-        //Todo.
-    };
-}
