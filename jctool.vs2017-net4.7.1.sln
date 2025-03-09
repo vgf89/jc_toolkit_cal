@@ -18,9 +18,7 @@ Global
 		{DF218734-A810-4FFF-8164-638680773512}.Release|x86.ActiveCfg = Release|Win32
 		{DF218734-A810-4FFF-8164-638680773512}.Release|x86.Build.0 = Release|Win32
 		{22E08F67-4E40-4A92-876B-410FFD49B20E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{22E08F67-4E40-4A92-876B-410FFD49B20E}.Debug|x86.Build.0 = Debug|Any CPU
 		{22E08F67-4E40-4A92-876B-410FFD49B20E}.Release|x86.ActiveCfg = Release|Any CPU
-		{22E08F67-4E40-4A92-876B-410FFD49B20E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
