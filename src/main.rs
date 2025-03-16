@@ -524,10 +524,6 @@ fn main() {
         Ok(controller) => controller,
         Err(e) => {
             println!("Error: {}", e);
-            println!("\nPlease ensure your controller is:");
-            println!("1. Paired with your PC via Bluetooth or USB");
-            println!("2. Currently connected (press any button on the controller)");
-            println!("3. Not already in use by another application");
             return;
         }
     };
