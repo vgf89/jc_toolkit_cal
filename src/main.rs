@@ -144,10 +144,10 @@ impl Controller {
         }
 
 
-        println!("\nIf you just installed new Hall Effect(HE) sticks, it is highly suggested to first flash the max-range calibration so you can physically align the magnets.");
+        println!("\nIf you just installed new Hall Effect sticks, it is highly recommended to first flash raw calibration then align your magnets before running the calibration wizard.");
         println!("\nChoose from the following:");
-        println!("1: to enter the calibration routine,");
-        println!("2: to flash a max-range 'raw' calibration (useful when physically aligning Hall Effect magnets).");
+        println!("1: Stick Calibration Wizard");
+        println!("2: Raw calibration (no deadzone, max range. Useful for aligning sensors)");
         
         io::stdout().flush()?;
         
@@ -158,7 +158,7 @@ impl Controller {
                 self.run_calibration(false)
             }
             '2' => {
-                println!("Flashing max-range calibration...");
+                println!("Beginning max-range calibration...");
                 self.run_calibration(true)
             }
             _ => {
@@ -503,14 +503,14 @@ impl Controller {
 
         println!("COMPLETE!");
         if raw_calibration {
-            println!("A max-range 'raw' calibration has been flashed. Please disconnect and reconnect your controller.");
+            println!("Raw calibration has been flashed. Please disconnect and reconnect your controller.");
             println!("Then go to Gamepad Tester and run a circularity test with the top controller shell on.");
             println!("If the whole output range does not fit inside the circularity test circle, you need to adjust your magnet positions.");
-            println!("Once as much of the stick output fits inside the circle as possible, re-run this tool with option 1 to run stick calibration\n");
+            println!("Once as much of the stick output fits inside the circle as possible, run the calibration wizard.\n");
         } else {
             println!("Calibration finished!");
             println!("Note: On PC, stick inputs may appear strange near the deadzone.");
-            println!("Please test center/deadzone on a Nintendo Switch.\n");
+            println!("Please test center and deadzone on a Nintendo Switch.\n");
         }
         
         Ok(())
