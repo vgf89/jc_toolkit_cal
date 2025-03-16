@@ -1,0 +1,7 @@
+| SPI Address | Size (bytes) | Description               | Content |
+|-------------|--------------|---------------------------|----------|
+| 0x603D      | 0x12      | Factory Stick Calibration    | Left stick (9 bytes):<br>- 0x603D-0x603F: Max above center<br>- 0x6040-0x6042: Center<br>- 0x6043-0x6045: Min below center<br>
+                                                          Right stick (9 bytes):<br>- 0x6046-0x6048: Max above center<br>- 0x6049-0x604B: Center<br>- 0x604C-0x604E: Min below center |
+| 0x6086      | 0x12      | Left Stick Parameters/Model  | Stick model data for left stick |
+| 0x6098      | 0x12      | Right Stick Parameters/Model | Stick model data for right stick |
+| 0x8010      | 0x16      | User Stick Calibration       | Left stick (11 bytes):<br>- Magic bytes + calibration data<br>Right stick (11 bytes):<br>- Magic bytes + calibration data |

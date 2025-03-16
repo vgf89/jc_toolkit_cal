@@ -1,0 +1,9 @@
+[package]
+name = "rustjoycal"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hidapi = "2.6.3"
+anyhow = "1.0"
+text_io = "0.1.12"
