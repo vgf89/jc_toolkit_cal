@@ -524,6 +524,8 @@ fn main() {
         Ok(controller) => controller,
         Err(e) => {
             println!("Error: {}", e);
+            println!("\nPress Enter to quit...");
+            Controller::read_char();
             return;
         }
     };
@@ -540,6 +542,8 @@ fn main() {
         }
         Err(e) => {
             println!("Error getting device info: {}", e);
+            println!("\nPress Enter to quit...");
+            Controller::read_char();
             return;
         }
     }
@@ -548,4 +552,7 @@ fn main() {
     if let Err(e) = controller.start_calibration() {
         println!("Error during calibration: {}", e);
     }
+
+    println!("\nPress Enter to quit...");
+    Controller::read_char();
 }
